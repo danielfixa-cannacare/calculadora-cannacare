@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CannaCare Pro 2026 - Gestão de Alerta</title>
+    <style>
+        :root { --roxo: #6a1b9a; --roxo-claro: #f3e5f5; --verde: #2e7d32; --laranja: #ef6c00; --azul: #1565c0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; display: flex; justify-content: center; }
+        .wrapper { width: 100%; max-width: 480px; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.1); padding-bottom: 60px;}
+        .header { background: var(--roxo); color: white; padding: 20px; text-align: center; }
+        .aba-container { display: flex; background: #eee; border-bottom: 1px solid #ddd; }
+        .aba { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: bold; color: #666; }
+        .aba.ativa { background: white; color: var(--roxo); border-bottom: 4px solid var(--roxo); }
+        .conteudo { padding: 20px; display: none; }
+        .conteudo.ativo { display: block; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; color: #333; }
+        select, input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; background: #fff; }
+        .row { display: flex; gap: 10px; }
+        .row > div { flex: 1; }
+        .btn { border: none; padding: 16px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; color: white; transition: 0.3s; }
+        .btn-estoque { background: var(--laranja); }
+        .btn-estoque:hover { background: #e65100; }
+        .btn-dose { background: var(--verde); }
+        .resultado { margin-top: 20px; padding: 20px; border-radius: 8px; font-size: 15px; line-height: 1.6; display: none; background: var(--roxo-claro); border-left: 6px solid var(--roxo); color: #4a148c; }
+        .alerta { color: #d32f2f; font-weight: bold; margin-top: 10px; padding: 10px; background: #ffebee; border-radius: 5px; border: 1px solid #ffcdd2; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="header">
+        <h2 style="margin:0">CannaCare</h2>
+        <small>Gestão de Estoque e Alerta 45 Dias</small>
+    </div>
+
+    <div class="aba-container">
+        <div class="aba ativa" onclick="mudarAba(0)">Estoque & Recompra</div>
+        <div class="aba" onclick="mudarAba(1)">Calculadora de Dose</div>
+    </div>
+
+    <div id="aba0" class="conteudo ativo">
+        <div class="input-group">
+            <label>Marca / Produto (Tabela 2026)</label>
+            <select class="lista-marcas" id="e_marca"></select>
+        </div>
+        <div class="input-group">
+            <label>Data de Início do Frasco</label>
+            <input type="date" id="e_data">
+        </div>
+        <div class="row">
+            <div><label>Vol. Frasco (ml)</label><input type="number" id="e_vol" value="30"></div>
+            <div><label>Qtd Frascos</label><input type="number" id="e_qtd" value="1"></div>
+        </div>
+        <div class="row">
+            <div style="flex:2"><label>Dose por Vez</label><input type="number" id="e_dose" placeholder="Ex: 10"></div>
+            <div><label>Unidade</label><select id="e_uni"><option value="gts">Gotas</option><option value="ml">ml</option></select></div>
+        </div>
+        <div class="input-group"><label>Vezes ao dia</label><input type="number" id="e_freq" value="2"></div>
+        <button class="btn btn-estoque" onclick="calcEstoque()">CALCULAR E GERAR ALERTAS</button>
+        <div id="res_estoque" class="resultado"></div>
+    </div>
+
+    <div id="aba1" class="conteudo">
+        <div class="input-group">
+            <label>Marca / Produto</label>
+            <select class="lista-marcas" id="d_marca"></select>
+        </div>
+        <div class="row">
+            <div><label>Conc. Total (mg)</label><input type="number" id="d_mgT" placeholder="Ex: 3000"></div>
+            <div><label>Vol. Frasco (ml)</label><input type="number" id="d_vol" value="30"></div>
+        </div>
+        <div style="margin: 25px 0; border-top: 2px dashed #ddd;"></div>
+        <div class="input-group">
+            <label>Dose Prescrita (mg por dose)</label>
+            <input type="number" id="d_pres" placeholder="Ex: 25">
+        </div>
+        <button class="btn btn-dose" onclick="calcDose()">CALCULAR DOSAGEM</button>
+        <div id="res_dose" class="resultado"></div>
+    </div>
+</div>
+
+<script>
+    const marcas = [
+        {n: "Allandiol (15ml)", v: 40}, {n: "Allandiol (30ml)", v: 30}, {n: "ALMA LAB", v: 40},
+        {n: "Bcure", v: 50}, {n: "Bluebird Botanicals", v: 40}, {n: "Cannifex", v: 40},
+        {n: "CBFarma", v: 40}, {n: "Canna River", v: 47}, {n: "CBDistillery", v: 45},
+        {n: "CbdMD", v: 43}, {n: "CP CANN", v: 30}, {n: "Formula Swiss", v: 29},
+        {n: "Golden CBD", v: 40}, {n: "HealthMeds", v: 45}, {n: "HempMeds RSHO 9 (1:1)", v: 33},
+        {n: "HempMeds RSHO BR 3.000mg", v: 45}, {n: "HempMeds RSHO BR 6.000mg", v: 50},
+        {n: "HempMeds RSHO Calm", v: 50}, {n: "HempMeds RSHO Focus", v: 50},
+        {n: "HempMeds RSHO X Isolado", v: 50}, {n: "Lazarus", v: 38}, {n: "LeafMed", v: 54},
+        {n: "Natyva", v: 40}, {n: "Nunature", v: 43}, {n: "Pangaia", v: 42},
+        {n: "Rare (Spray)", v: 0}, {n: "Reuni", v: 40}, {n: "Sensia", v: 45},
+        {n: "Sphera Joy", v: 42}, {n: "UB Super", v: 52}, {n: "USAHemp", v: 43},
+        {n: "Valtellinamed", v: 40}
+    ];
+
+    document.querySelectorAll('.lista-marcas').forEach(select => {
+        marcas.forEach(m => {
+            let opt = document.createElement('option');
+            opt.value = m.v; 
+            opt.text = m.n + (m.v === 0 ? " (Spray)" : " - " + m.v + " gts/ml");
+            select.add(opt);
+        });
+    });
+
+    function mudarAba(idx) {
+        document.querySelectorAll('.aba').forEach((a, i) => a.classList.toggle('ativa', i === idx));
+        document.querySelectorAll('.conteudo').forEach((c, i) => c.classList.toggle('ativo', i === idx));
+    }
+
+    function formatarData(data) {
+        return data.toLocaleDateString('pt-BR');
+    }
+
+    function calcEstoque() {
+        const gtsMl = parseFloat(document.getElementById('e_marca').value);
+        const vol = parseFloat(document.getElementById('e_vol').value);
+        const qtd = parseFloat(document.getElementById('e_qtd').value);
+        const dose = parseFloat(document.getElementById('e_dose').value);
+        const uni = document.getElementById('e_uni').value;
+        const freq = parseFloat(document.getElementById('e_freq').value);
+        const dataInicioStr = document.getElementById('e_data').value;
+
+        if(!dose || !vol || !dataInicioStr) return alert("Preencha a Dose, Volume e Data de Início!");
+
+        let dias;
+        if (gtsMl === 0) { // Rare
+            dias = (75 * qtd) / (dose * freq);
+        } else {
+            const totalGts = vol * gtsMl * qtd;
+            const consumoDia = (uni === 'gts') ? (dose * freq) : (dose * gtsMl * freq);
+            dias = totalGts / consumoDia;
+        }
+
+        const dataFim = new Date(dataInicioStr);
+        dataFim.setDate(dataFim.getDate() + Math.floor(dias));
+
+        const dataAlerta = new Date(dataFim);
+        dataAlerta.setDate(dataAlerta.getDate() - 45);
+
+        const res = document.getElementById('res_estoque');
+        res.innerHTML = `
+            O frasco durará: <strong>${Math.floor(dias)} dias</strong>.<br>
+            📅 Termina em: <strong>${formatarData(dataFim)}</strong>
+            <div class="alerta">
+                🔔 AVISAR PACIENTE EM: ${formatarData(dataAlerta)}<br>
+                <small>(45 dias antes do término)</small>
+            </div>
+        `;
+        res.style.display = 'block';
+    }
+
+    function calcDose() {
+        const gtsMl = parseFloat(document.getElementById('d_marca').value);
+        const mgT = parseFloat(document.getElementById('d_mgT').value);
+        const vol = parseFloat(document.getElementById('d_vol').value);
+        const pres = parseFloat(document.getElementById('d_pres').value);
+
+        if(!mgT || !pres || !vol) return alert("Preencha todos os campos!");
+
+        const res = document.getElementById('res_dose');
+        if (gtsMl === 0) {
+            const mgS = mgT / 75;
+            res.innerHTML = `Dose: <strong>${(pres/mgS).toFixed(1)} sprays</strong>.`;
+        } else {
+            const mgMl = mgT / vol;
+            const mgGt = mgMl / gtsMl;
+            res.innerHTML = `Dose: <strong>${(pres/mgGt).toFixed(1)} gotas</strong>.<br><small>${mgGt.toFixed(2)} mg por gota.</small>`;
+        }
+        res.style.display = 'block';
+    }
+</script>
+</body>
+</html>
