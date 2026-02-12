@@ -21,8 +21,8 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .card { background: #fdfdfd; border: 1px solid #eee; border-radius: 15px; padding: 15px; margin-bottom: 20px; }
         .input-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 12px; color: #777; text-transform: uppercase; }
-        select, input { width: 100%; padding: 14px; border: 1.5px solid #eee; border-radius: 10px; font-size: 15px; background: #fff; color: #333; outline: none; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 11px; color: #777; text-transform: uppercase; }
+        select, input { width: 100%; padding: 14px; border: 1.5px solid #eee; border-radius: 10px; font-size: 14px; background: #fff; color: #333; outline: none; }
         .row { display: flex; gap: 10px; }
         .row > div { flex: 1; }
         .btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; color: white; }
@@ -40,7 +40,7 @@
 <div class="app-container">
     <div class="app-header">
         <h1>CannaCare</h1>
-        <p>Inteligência em Dosagem • 2026</p>
+        <p>Gestão Profissional • Tabela 2026</p>
     </div>
     <div class="tab-bar">
         <div class="tab active" onclick="switchTab(0)">📦 ESTOQUE</div>
@@ -49,7 +49,7 @@
     <div class="content">
         <div id="tab0" class="tab-content active">
             <div class="card">
-                <div class="input-group"><label>Marca</label><select class="brand-list" id="e_brand"></select></div>
+                <div class="input-group"><label>Marca / Produto</label><select class="brand-list" id="e_brand"></select></div>
                 <div class="input-group"><label>Data de Início</label><input type="date" id="e_date_start"></div>
                 <div class="row">
                     <div class="input-group"><label>Vol. (ml)</label><input type="number" id="e_vol" value="30"></div>
@@ -81,42 +81,8 @@
 <script>
     const brands = [
         {n: "Allandiol (15ml)", v: 40}, {n: "Allandiol (30ml)", v: 30}, {n: "ALMA LAB", v: 40},
-        {n: "Bcure", v: 50}, {n: "Canna River", v: 47}, {n: "CbdMD", v: 43}, 
-        {n: "HempMeds RSHO 9", v: 33}, {n: "HempMeds BR 3k", v: 45}, {n: "HempMeds BR 6k", v: 50},
-        {n: "HempMeds X Isolado", v: 50}, {n: "Lazarus", v: 38}, {n: "LeafMed", v: 54},
-        {n: "Rare (Spray)", v: 0}, {n: "UB Super", v: 52}, {n: "USAHemp", v: 43}
-    ];
-    document.querySelectorAll('.brand-list').forEach(s => {
-        brands.forEach(b => {
-            let o = document.createElement('option');
-            o.value = b.v; o.text = b.n + (b.v==0 ? " (Spray)" : ` (${b.v} gts/ml)`);
-            s.add(o);
-        });
-    });
-    function switchTab(i) {
-        document.querySelectorAll('.tab').forEach((t, idx) => t.classList.toggle('active', idx === i));
-        document.querySelectorAll('.tab-content').forEach((c, idx) => c.classList.toggle('active', idx === i));
-        document.getElementById('tab0').style.display = i === 0 ? 'block' : 'none';
-        document.getElementById('tab1').style.display = i === 1 ? 'block' : 'none';
-    }
-    function calcStock() {
-        const gtsMl = parseFloat(document.getElementById('e_brand').value), vol = parseFloat(document.getElementById('e_vol').value), qty = parseFloat(document.getElementById('e_qty').value), dose = parseFloat(document.getElementById('e_dose').value), unit = document.getElementById('e_unit').value, freq = parseFloat(document.getElementById('e_freq').value), start = document.getElementById('e_date_start').value;
-        if(!dose || !start) return alert("Preencha a dose e data!");
-        let days = (gtsMl === 0) ? (75 * qty) / (dose * freq) : (vol * gtsMl * qty) / ((unit === 'gts' ? dose : dose * gtsMl) * freq);
-        let dEnd = new Date(start); dEnd.setDate(dEnd.getDate() + Math.floor(days) + 1);
-        let dAlert = new Date(dEnd); dAlert.setDate(dAlert.getDate() - 45);
-        const r = document.getElementById('res_stock');
-        r.innerHTML = `<div class="res-title">📊 Resumo do Estoque</div>Duração: <b>${Math.floor(days)} dias</b><br>Fim do Frasco: <span class="res-date">${dEnd.toLocaleDateString('pt-BR')}</span><div class="alerta-container">🔔 AVISAR EM: ${dAlert.toLocaleDateString('pt-BR')}</div>`;
-        r.style.display = 'block';
-    }
-    function calcDose() {
-        const gtsMl = parseFloat(document.getElementById('d_brand').value), mgt = parseFloat(document.getElementById('d_mgt').value), vol = parseFloat(document.getElementById('d_vol').value), pres = parseFloat(document.getElementById('d_pres').value);
-        if(!mgt || !pres) return alert("Preencha mg e prescrição!");
-        const r = document.getElementById('res_dose');
-        if (gtsMl === 0) { let s = pres / (mgt / 75); r.innerHTML = `<div class="res-title">💧 Dose Sugerida</div><span class="res-date">${s.toFixed(1)} Sprays</span>`; }
-        else { let g = pres / ((mgt / vol) / gtsMl); r.innerHTML = `<div class="res-title">💧 Dose Sugerida</div><span class="res-date">${g.toFixed(1)} Gotas</span><br><small>Equivale a ${(pres/(mgt/vol)).toFixed(2)} ml</small>`; }
-        r.style.display = 'block';
-    }
-</script>
-</body>
-</html>
+        {n: "Bcure", v: 50}, {n: "Bluebird Botanicals", v: 40}, {n: "Cannifex", v: 40},
+        {n: "CBFarma", v: 40}, {n: "Canna River", v: 47}, {n: "CBDistillery", v: 45},
+        {n: "CbdMD", v: 43}, {n: "CP CANN", v: 30}, {n: "Formula Swiss", v: 29},
+        {n: "Golden CBD", v: 40}, {n: "HealthMeds", v: 45}, {n: "HempMeds RSHO 9", v: 33},
+        {n: "HempMeds BR 3k", v: 45}, {n: "HempMeds BR 6k", v: 50}, {n: "HempMeds Calm", v: 50},
